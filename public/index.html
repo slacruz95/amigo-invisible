@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Amigo invisible</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">INTERCAMBIO DE REGALOS</p>
+      <h1>Amigo invisible</h1>
+    </header>
+    <section id="organizer">
+      <form id="create">
+        <h2>Organizá el sorteo</h2>
+        <label for="names">Participantes</label>
+        <p id="hint">Escribí un nombre por línea. Si hay nombres repetidos, agregá un apellido o apodo.</p>
+        <textarea id="names" aria-describedby="hint" rows="6" placeholder="Ana&#10;Bruno&#10;Carla" required></textarea>
+        <button>Dar de alta el sorteo</button>
+      </form>
+      <div id="share" hidden>
+        <label for="link">Enlace del sorteo</label>
+        <input id="link" readonly>
+        <div class="actions">
+          <button id="copy" type="button">Copiar enlace</button>
+          <a id="open">Abrir sorteo</a>
+        </div>
+        <p>Compartilo con el grupo. Cualquiera con el enlace puede elegir cualquier nombre.</p>
+      </div>
+    </section>
+    <section id="participant" hidden>
+      <div id="choose">
+        <h2>¿Quién sos?</h2>
+        <label for="people">Elegí tu nombre</label>
+        <select id="people"><option value="">Seleccioná tu nombre</option></select>
+      </div>
+      <div id="confirm" hidden>
+        <h2 id="identity" tabindex="-1"></h2>
+        <button id="reveal" type="button">Ver amigo invisible</button>
+        <div id="result" aria-live="polite"></div>
+        <button id="back" class="secondary" type="button">Cambiar de persona</button>
+      </div>
+    </section>
+    <p id="status" role="status"></p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,22 @@
+* { box-sizing: border-box; }
+:root { font-family: system-ui, sans-serif; color: #192c26; background: #edf4ed; }
+body { margin: 0; padding: clamp(1rem, 5vw, 4rem); }
+main { max-width: 42rem; margin: auto; }
+header { background: #183c32; color: #fff; padding: 2rem clamp(1.25rem, 5vw, 2.75rem); border-radius: 1.4rem 1.4rem 0 0; }
+.eyebrow { color: #cfedba; font-weight: 750; letter-spacing: .12em; font-size: .875rem; }
+h1 { font-family: Georgia, serif; font-size: clamp(2.4rem, 8vw, 4rem); margin: 0; line-height: 1; }
+section { background: white; padding: clamp(1.25rem, 5vw, 2.75rem); border-radius: 0 0 1.4rem 1.4rem; }
+h2 { margin: 0 0 1.25rem; overflow-wrap: anywhere; }
+p { line-height: 1.5; }
+label { display: block; font-weight: 700; margin-bottom: .5rem; }
+#hint { margin: 0 0 .75rem; }
+textarea, input, select { width: 100%; padding: .8rem; border: 1px solid #688577; border-radius: .6rem; background: #f6faf6; color: inherit; font: inherit; }
+textarea { resize: vertical; }
+button, .actions a { display: inline-block; margin-top: .85rem; padding: .75rem 1rem; color: white; background: #245643; border: 1px solid #245643; border-radius: .6rem; font: inherit; font-weight: 700; cursor: pointer; text-decoration: none; }
+button:hover, .actions a:hover { background: #153e2f; }
+button.secondary, .actions a { background: white; color: #245643; }
+button.secondary:hover, .actions a:hover { background: #edf4ed; }
+:focus-visible { outline: 3px solid #a14b22; outline-offset: 3px; }
+#share { border-top: 1px solid #c9d9ce; margin-top: 1.5rem; padding-top: 1.5rem; }
+.actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+#result:not(:empty) { margin-top: 1rem; padding: 1rem; background: #edf4ed; border-radius: .6rem; font-size: 1.25rem; overflow-wrap: anywhere; }
