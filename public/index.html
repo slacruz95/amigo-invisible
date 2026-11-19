@@ -3,48 +3,57 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
   <title>Amigo invisible</title>
-  <link rel="stylesheet" href="styles.css">
-  <script type="module" src="app.mjs"></script>
+  <link rel="stylesheet" href="styles.css?v=2">
+  <script type="module" src="app.mjs?v=2"></script>
 </head>
 <body>
   <main>
-    <header>
-      <p class="eyebrow">INTERCAMBIO DE REGALOS</p>
-      <h1>Amigo invisible</h1>
-    </header>
-    <section id="organizer">
-      <form id="create">
-        <h2>Organizá el sorteo</h2>
-        <label for="names">Participantes</label>
-        <p id="hint">Escribí un nombre por línea. Si hay nombres repetidos, agregá un apellido o apodo.</p>
-        <textarea id="names" aria-describedby="hint" rows="6" placeholder="Ana&#10;Bruno&#10;Carla" required></textarea>
-        <button>Dar de alta el sorteo</button>
+    <header><p class="eyebrow">INTERCAMBIO DE REGALOS</p><h1>Amigo invisible</h1></header>
+    <section id="home" hidden>
+      <h2>Organizá el sorteo</h2>
+      <button id="create">Crear grupo</button>
+      <a class="link" id="resume" hidden>Volver a mi grupo</a>
+    </section>
+    <section id="admin" hidden>
+      <h2>Tu grupo</h2>
+      <label for="invite">Enlace de inscripción</label>
+      <input id="invite" readonly>
+      <div class="actions"><button type="button" data-copy="invite">Copiar enlace</button><a class="link" id="open-invite" target="_blank" rel="noopener noreferrer">Abrir inscripción</a></div>
+      <h3 id="count">Participantes</h3>
+      <p id="empty">Todavía no hay participantes.</p>
+      <ul id="roster"></ul>
+      <button id="launch" disabled>Lanzar sorteo</button>
+      <p id="admin-phase"></p>
+    </section>
+    <section id="join" hidden>
+      <form id="register">
+        <h2>Anotate al sorteo</h2>
+        <label for="name">Tu nombre</label>
+        <input id="name" maxlength="60" autocomplete="name" required placeholder="Por ejemplo, Ana Pérez">
+        <button>Registrarme</button>
       </form>
-      <div id="share" hidden>
-        <label for="link">Enlace del sorteo</label>
-        <input id="link" readonly>
-        <div class="actions">
-          <button id="copy" type="button">Copiar enlace</button>
-          <a id="open">Abrir sorteo</a>
-        </div>
-        <p>Compartilo con el grupo. Cualquiera con el enlace puede elegir cualquier nombre.</p>
-      </div>
+      <p id="closed" hidden>La inscripción ya cerró. Si te anotaste, abrí tu enlace personal para ver el resultado.</p>
     </section>
-    <section id="participant" hidden>
-      <div id="choose">
-        <h2>¿Quién sos?</h2>
-        <label for="people">Elegí tu nombre</label>
-        <select id="people"><option value="">Seleccioná tu nombre</option></select>
-      </div>
-      <div id="confirm" hidden>
-        <h2 id="identity" tabindex="-1"></h2>
-        <button id="reveal" type="button">Ver amigo invisible</button>
-        <div id="result" aria-live="polite"></div>
-        <button id="back" class="secondary" type="button">Cambiar de persona</button>
-      </div>
+    <section id="personal" hidden>
+      <h2 id="identity"></h2>
+      <label for="personal-link">Tu enlace personal</label>
+      <input id="personal-link" readonly>
+      <button type="button" data-copy="personal-link">Copiar mi enlace personal</button>
+      <p>Guardalo para volver desde otro dispositivo. Cualquiera con este enlace puede ver tu asignación.</p>
+      <p id="waiting">El sorteo todavía no se lanzó.</p>
+      <button id="reveal" hidden>Ver amigo invisible</button>
+      <p id="result" aria-live="polite"></p>
     </section>
-    <p id="status" role="status"></p>
+    <section id="legacy" hidden>
+      <h2>¿Quién sos?</h2>
+      <label for="legacy-people">Elegí tu nombre</label>
+      <select id="legacy-people"></select>
+      <button id="legacy-reveal">Ver amigo invisible</button>
+      <p id="legacy-result" aria-live="polite"></p>
+    </section>
+    <p id="status" role="status">Cargando…</p>
   </main>
 </body>
 </html>

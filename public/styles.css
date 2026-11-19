@@ -20,3 +20,11 @@ button.secondary:hover, .actions a:hover { background: #edf4ed; }
 #share { border-top: 1px solid #c9d9ce; margin-top: 1.5rem; padding-top: 1.5rem; }
 .actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 #result:not(:empty) { margin-top: 1rem; padding: 1rem; background: #edf4ed; border-radius: .6rem; font-size: 1.25rem; overflow-wrap: anywhere; }
+
+.link { display: inline-block; margin: .9rem 0 0 .65rem; color: #245643; font-weight: 700; }
+#roster { padding-left: 0; list-style: none; }
+#roster li { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .5rem 0; border-bottom: 1px solid #c9d9ce; }
+#roster li span { overflow-wrap: anywhere; }
+#roster li button { margin: 0; flex-shrink: 0; }
+button:disabled { opacity: .6; cursor: not-allowed; }
+input[readonly] { text-overflow: ellipsis; }
