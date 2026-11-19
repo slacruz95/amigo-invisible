@@ -5,74 +5,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
   <title>Amigo invisible</title>
-  <link rel="stylesheet" href="styles.css?v=3">
-  <script type="module" src="app.mjs?v=3"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/rounds.mjs?v=1"></script>
+  <style>
+    #roster label { display: flex; align-items: center; gap: .65rem; margin: 0; cursor: pointer; }
+    #roster input[type="checkbox"] { width: 1.125rem; height: 1.125rem; }
+  </style>
 </head>
 <body>
   <main>
     <header><p class="eyebrow">INTERCAMBIO DE REGALOS</p><h1>Amigo invisible</h1></header>
-    <section id="home" hidden>
-      <h2>Organizá el sorteo</h2>
-      <a class="link" id="admin-entry" href="#admin">Ingresar como administrador</a>
-      <div id="admin-controls" hidden>
-        <button id="create">Crear grupo</button>
-        <button id="signout" class="secondary">Cerrar sesión</button>
-        <div id="saved-groups" hidden>
-          <label for="group-picker">Grupos existentes</label>
-          <select id="group-picker"></select>
-        </div>
-      </div>
-    </section>
-    <section id="login" hidden>
-      <form id="admin-login">
-        <h2>Acceso de administrador</h2>
-        <label for="admin-user">Usuario</label>
-        <input id="admin-user" autocomplete="username" required>
-        <label for="admin-password">Contraseña</label>
-        <input id="admin-password" type="password" autocomplete="current-password" required>
-        <button>Ingresar</button>
+    <section id="home">
+      <form id="enter">
+        <label for="name">Tu nombre de usuario</label>
+        <input id="name" required maxlength="60" autocomplete="username" placeholder="Escribí tu nombre">
+        <button>Entrar</button>
       </form>
-      <a class="link" href="#">Volver al inicio</a>
     </section>
-    <section id="admin" hidden>
-      <h2>Tu grupo</h2>
-      <a class="link" href="#">Volver a grupos</a>
-      <label for="invite">Enlace de inscripción</label>
-      <input id="invite" readonly>
-      <div class="actions"><button type="button" data-copy="invite">Copiar enlace</button><a class="link" id="open-invite" target="_blank" rel="noopener noreferrer">Abrir inscripción</a></div>
-      <h3 id="count">Participantes</h3>
-      <p id="empty">Todavía no hay participantes.</p>
-      <ul id="roster"></ul>
-      <button id="launch" disabled>Lanzar sorteo</button>
-      <p id="admin-phase"></p>
-    </section>
-    <section id="join" hidden>
-      <form id="register">
-        <h2>Anotate al sorteo</h2>
-        <label for="name">Tu nombre</label>
-        <input id="name" maxlength="60" autocomplete="name" required placeholder="Por ejemplo, Ana Pérez">
-        <button>Registrarme</button>
-      </form>
-      <p id="closed" hidden>La inscripción ya cerró. Si te anotaste, abrí tu enlace personal para ver el resultado.</p>
-    </section>
-    <section id="personal" hidden>
+    <section id="participant" hidden>
       <h2 id="identity"></h2>
       <label for="personal-link">Tu enlace personal</label>
       <input id="personal-link" readonly>
       <button type="button" data-copy="personal-link">Copiar mi enlace personal</button>
-      <p>Guardalo para volver desde otro dispositivo. Cualquiera con este enlace puede ver tu asignación.</p>
-      <p id="waiting">El sorteo todavía no se lanzó.</p>
-      <button id="reveal" hidden>Ver amigo invisible</button>
+      <p>Guardalo para entrar desde otro dispositivo. Conservá el enlace en privado.</p>
+      <p id="waiting">Esperá a que se haga el sorteo.</p>
+      <p id="participant-round" hidden></p>
       <p id="result" aria-live="polite"></p>
     </section>
-    <section id="legacy" hidden>
-      <h2>¿Quién sos?</h2>
-      <label for="legacy-people">Elegí tu nombre</label>
-      <select id="legacy-people"></select>
-      <button id="legacy-reveal">Ver amigo invisible</button>
-      <p id="legacy-result" aria-live="polite"></p>
+    <section id="admin" hidden>
+      <h2>Panel de administración</h2>
+      <h3 id="count">Participantes registrados</h3>
+      <p>Marcá a quienes participan en esta ronda.</p>
+      <ul id="roster"></ul>
+      <button id="draw" disabled>Lanzar sorteo</button>
+      <div id="audit-share" hidden>
+        <p id="round"></p>
+        <p>Compartí el enlace de auditoría de esta ronda con una persona de confianza.</p>
+        <label for="audit-link">Enlace de auditoría</label>
+        <input id="audit-link" readonly>
+        <button type="button" data-copy="audit-link">Copiar enlace de auditoría</button>
+      </div>
     </section>
-    <p id="status" role="status">Cargando…</p>
+    <section id="audit" hidden>
+      <h2>Verificación del sorteo</h2>
+      <p id="audit-result"></p>
+      <ul id="audit-details"></ul>
+    </section>
+    <p id="status" role="status"></p>
   </main>
 </body>
 </html>

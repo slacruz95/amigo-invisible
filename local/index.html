@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Amigo invisible</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/local.mjs"></script>
+  <style>
+    #roster label { display: flex; align-items: center; gap: .65rem; margin: 0; cursor: pointer; }
+    #roster input[type="checkbox"] { width: 1.125rem; height: 1.125rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <header><p class="eyebrow">INTERCAMBIO DE REGALOS</p><h1>Amigo invisible</h1></header>
+    <section id="home">
+      <form id="enter">
+        <label for="name">Tu nombre de usuario</label>
+        <input id="name" required maxlength="60" autocomplete="username" placeholder="Escribí tu nombre">
+        <button>Entrar</button>
+      </form>
+    </section>
+    <section id="participant" hidden>
+      <h2 id="identity"></h2>
+      <label for="personal-link">Tu enlace personal</label>
+      <input id="personal-link" readonly>
+      <button type="button" data-copy="personal-link">Copiar mi enlace personal</button>
+      <p>Guardalo para entrar desde otro dispositivo. Conservá el enlace en privado.</p>
+      <p id="waiting">Esperá a que se haga el sorteo.</p>
+      <p id="participant-round" hidden></p>
+      <p id="result" aria-live="polite"></p>
+    </section>
+    <section id="admin" hidden>
+      <h2>Panel de administración</h2>
+      <h3 id="count">Participantes registrados</h3>
+      <p>Marcá a quienes participan en esta ronda.</p>
+      <ul id="roster"></ul>
+      <button id="draw" disabled>Lanzar sorteo</button>
+      <div id="audit-share" hidden>
+        <p id="round"></p>
+        <p>Compartí el enlace de auditoría de esta ronda con una persona de confianza.</p>
+        <label for="audit-link">Enlace de auditoría</label>
+        <input id="audit-link" readonly>
+        <button type="button" data-copy="audit-link">Copiar enlace de auditoría</button>
+      </div>
+    </section>
+    <section id="audit" hidden>
+      <h2>Verificación del sorteo</h2>
+      <p id="audit-result"></p>
+      <ul id="audit-details"></ul>
+    </section>
+    <p id="status" role="status"></p>
+  </main>
+</body>
+</html>
