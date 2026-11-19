@@ -127,6 +127,7 @@ async function request(req, res) {
       unique: new Set(assigned.filter(Boolean)).size,
       allEligible: assigned.every(name => eligible.has(name)),
       nobodySelf: participants.every(person => person.name !== person.recipient),
+      pairs: participants.map(person => ({ giver: person.name, recipient: person.recipient })),
     });
   }
   return send(res, 404, { error: "Este enlace no está disponible." });

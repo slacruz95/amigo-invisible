@@ -2,7 +2,7 @@
 
 1. Abrí la app, ingresá tu nombre y guardá tu enlace personal. El inicio reconoce a quienes ya se registraron en ese navegador.
 2. Para administrar, ingresá como `admin1`. El panel es accesible a cualquiera que use ese nombre. Marcá quiénes participan y lanzá el sorteo.
-3. Podés cambiar la selección y lanzar otra ronda. Al publicarla se reemplazan las asignaciones y el enlace de auditoría. La auditoría muestra cantidades y comprobaciones sin publicar las parejas.
+3. Podés cambiar la selección y lanzar otra ronda. Al publicarla se reemplazan las asignaciones y el enlace de auditoría. El enlace de auditoría muestra las comprobaciones y quién le regala a quién. Compartilo solo con quien vaya a verificar la ronda.
 
 La versión publicada usa sesiones anónimas de Firebase y Realtime Database para guardar los registros. Las reglas mantienen privados los enlaces personales y solo muestran una asignación a quien puede presentar su enlace. Los participantes entran por nombre y conservan su acceso a través del enlace personal. Los datos de prueba local están separados. Los enlaces del sistema de grupos anterior conservan su ruta.
 

@@ -1,4 +1,4 @@
-import { api } from "./rounds-api.mjs?v=3";
+import { api } from "./rounds-api.mjs?v=4";
 
 const hash = location.hash.slice(1);
 if (/^(?:join|organize)\//u.test(hash) || (/^[A-Za-z0-9_-]+$/u.test(hash) && hash.length > 20)) {
@@ -122,6 +122,11 @@ async function refresh(route, token, current) {
         data.allEligible ? "Todos los destinatarios están registrados." : "Hay un destinatario que no está registrado.",
         data.nobodySelf ? "Nadie se sacó a sí mismo." : "Hay personas que se sacaron a sí mismas.",
       ].map(listItem));
+      const pairs = Object.values(data.pairs ?? {});
+      const assignments = find("audit-pairs");
+      assignments.replaceChildren(...pairs.map(({ giver, recipient }) => listItem(`${giver} le regala a ${recipient}.`)));
+      assignments.hidden = pairs.length === 0;
+      find("audit-pairs-heading").hidden = assignments.hidden;
       show("audit");
     }
   } catch (error) {

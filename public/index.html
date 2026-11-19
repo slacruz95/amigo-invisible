@@ -6,7 +6,7 @@
   <meta name="referrer" content="no-referrer">
   <title>Amigo invisible</title>
   <link rel="stylesheet" href="/styles.css">
-  <script type="module" src="/rounds.mjs?v=3"></script>
+  <script type="module" src="/rounds.mjs?v=4"></script>
   <style>
     #roster label { display: flex; align-items: center; gap: .65rem; margin: 0; cursor: pointer; }
     #roster input[type="checkbox"] { width: 1.125rem; height: 1.125rem; }
@@ -50,6 +50,8 @@
       <h2>Verificación del sorteo</h2>
       <p id="audit-result"></p>
       <ul id="audit-details"></ul>
+      <h3 id="audit-pairs-heading" hidden>Quién le regala a quién</h3>
+      <ul id="audit-pairs" hidden></ul>
     </section>
     <p id="status" role="status"></p>
   </main>

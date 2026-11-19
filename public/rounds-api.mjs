@@ -118,7 +118,8 @@ export async function api(path, token, body) {
     const recipients = Object.values(assignments);
     const summary = { round, count: selected.length, assigned: recipients.length, unique: new Set(recipients).size,
       allEligible: recipients.every(name => selected.includes(name)),
-      nobodySelf: draw.recipients.every((recipient, index) => recipient !== index) };
+      nobodySelf: draw.recipients.every((recipient, index) => recipient !== index),
+      pairs: draw.names.map((giver, index) => ({ giver, recipient: draw.names[draw.recipients[index]] })) };
     try {
       await fb.update(ref("board"), {
         latest: round,
