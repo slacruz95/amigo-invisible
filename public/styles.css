@@ -32,3 +32,5 @@ input[readonly] { text-overflow: ellipsis; }
 #admin-login label:not(:first-of-type), #saved-groups { margin-top: 1rem; }
 #admin > .link { margin: 0 0 1rem; }
 [hidden] { display: none !important; }
+
+#waiting { font-size: 1.35rem; font-weight: 750; }
