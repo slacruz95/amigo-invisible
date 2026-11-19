@@ -13,7 +13,7 @@ Desde esta carpeta, ejecutá `python -m http.server 8000 --directory public` y a
 Con Firebase CLI instalada y una cuenta de Google autorizada:
 
 1. Ejecutá `firebase login`.
-2. Verificá que tu cuenta tenga acceso al proyecto `amigo-invisible` con `firebase projects:list`.
+2. Verificá que tu cuenta tenga acceso al proyecto `amigo-invisible-b52dd` con `firebase projects:list`.
 3. Publicá con `firebase deploy --only hosting`. El proyecto predeterminado se define en `.firebaserc`.
 
 El sitio es estático y no requiere base de datos ni autenticación para jugar.
