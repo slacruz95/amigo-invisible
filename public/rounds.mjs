@@ -1,4 +1,4 @@
-import { api } from "./rounds-api.mjs?v=2";
+import { api } from "./rounds-api.mjs?v=3";
 
 const hash = location.hash.slice(1);
 if (/^(?:join|organize)\//u.test(hash) || (/^[A-Za-z0-9_-]+$/u.test(hash) && hash.length > 20)) {
@@ -49,7 +49,13 @@ function renderAdmin(data) {
       checkbox.value = name;
       checkbox.checked = selected.has(name) || (!data.audit && !previous.has(name));
       label.append(checkbox, document.createTextNode(name));
-      item.append(label);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "secondary";
+      remove.textContent = "Eliminar";
+      remove.setAttribute("aria-label", `Eliminar a ${name}`);
+      remove.onclick = () => removePerson(name, remove);
+      item.append(label, remove);
       return item;
     });
     find("roster").replaceChildren(...rows);
@@ -62,6 +68,20 @@ function renderAdmin(data) {
   if (data.audit) {
     find("round").textContent = `Ronda ${data.round} publicada.`;
     find("audit-link").value = link(`auditoria/${data.audit}`);
+  }
+}
+
+async function removePerson(name, button) {
+  if (!window.confirm(`¿Eliminar a ${name}? Su enlace personal dejará de funcionar.`)) return;
+  button.disabled = true;
+  status.textContent = "";
+  try {
+    await api("remove", adminToken, { name });
+    await refresh("admin", adminToken, generation);
+    status.textContent = `Eliminaste a ${name}.`;
+  } catch (error) {
+    status.textContent = error.message;
+    button.disabled = false;
   }
 }
 
@@ -114,6 +134,7 @@ async function refresh(route, token, current) {
         try { localStorage.removeItem("amigo-personal"); } catch {}
       }
       if (!location.hash) show("home");
+      else show();
     }
   }
 }

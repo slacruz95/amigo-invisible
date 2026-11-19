@@ -127,8 +127,8 @@
             },
             "entries": {
               "$key": {
-                ".read": "auth != null && $round == '' + root.child('live').child('board').child('latest').val() && root.child('live').child('claims').child(auth.uid).child($key).exists()",
-                ".validate": "$key.matches(/^[a-f0-9]{64}$/) && newData.isString() && newData.val().length > 0 && newData.val().length <= 60 && root.child('live').child('board').child('roster').child($key).exists()"
+                ".read": "auth != null && $round == '' + root.child('live').child('board').child('latest').val() && root.child('live').child('claims').child(auth.uid).child($key).exists() && !root.child('live').child('board').child('removed').child($key).exists()",
+                ".validate": "$key.matches(/^[a-f0-9]{64}$/) && newData.isString() && newData.val().length > 0 && newData.val().length <= 60 && root.child('live').child('board').child('roster').child($key).exists() && !root.child('live').child('board').child('removed').child($key).exists()"
               }
             },
             "$other": {
@@ -166,6 +166,14 @@
         },
         "$other": {
           ".validate": false
+        },
+        "removed": {
+          ".read": "auth != null",
+          "$key": {
+            ".read": true,
+            ".write": "auth != null && !data.exists() && newData.val() == true && root.child('live').child('board').child('roster').child($key).exists()",
+            ".validate": "$key.matches(/^[a-f0-9]{64}$/) && newData.val() == true"
+          }
         }
       }
     }

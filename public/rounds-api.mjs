@@ -49,7 +49,7 @@ export async function api(path, token, body) {
       return { admin: true, token: true };
     }
     const key = hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical))));
-    if (token && (await get("tickets/" + token))?.key === key) return { token };
+    if (token && (await get("tickets/" + token))?.key === key && !(await get("board/removed/" + key))) return { token };
     if (await get("board/latest")) fail("El sorteo ya se hizo. Abrí tu enlace personal.", 409);
     const personal = newToken();
     try {
@@ -63,6 +63,7 @@ export async function api(path, token, body) {
   if (path === "participant") {
     const [person, round] = await Promise.all([get("tickets/" + token), get("board/latest")]);
     if (!person) fail("Este enlace personal no es válido.", 404);
+    if (await get("board/removed/" + person.key)) fail("Este participante fue eliminado del sorteo.", 404);
     if (!round) return { name: person.name, drawn: false };
     const user = await session(fb);
     const claim = `claims/${user.uid}/${person.key}`;
@@ -84,8 +85,18 @@ export async function api(path, token, body) {
     return summary;
   }
   await session(fb);
-  const [roster, latest] = await Promise.all([get("board/roster"), get("board/latest")]);
-  const entries = Object.entries(roster ?? {});
+  const [roster, latest, removed] = await Promise.all([get("board/roster"), get("board/latest"), get("board/removed")]);
+  const entries = Object.entries(roster ?? {}).filter(([key]) => !removed?.[key]);
+  if (path === "remove") {
+    const entry = entries.find(([, name]) => name === body.name);
+    if (!entry) fail("Esa persona ya no está en la lista.", 404);
+    try {
+      await fb.set(ref("board/removed/" + entry[0]), true);
+    } catch {
+      fail("No se pudo eliminar a esa persona. Actualizá la lista e intentá de nuevo.", 409);
+    }
+    return { removed: true };
+  }
   const current = latest ? await get(`board/rounds/${latest}/panel`) : null;
   if (path === "admin") {
     const selected = new Set(Object.values(current?.selected ?? {}));
