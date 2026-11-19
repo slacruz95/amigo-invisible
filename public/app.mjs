@@ -3,8 +3,9 @@ import { createDraw, decodeDraw } from "./draw.mjs";
 const find = id => document.getElementById(id);
 const status = find("status");
 const roomPattern = /^[a-f0-9]{32}$/;
+const adminEmail = "admin@amigo-invisible-b52dd.invalid";
 const ticketPattern = /^[a-f0-9]{64}$/;
-const viewIds = ["home", "admin", "join", "personal", "legacy"];
+const viewIds = ["home", "login", "admin", "join", "personal", "legacy"];
 let firebase;
 let generation = 0;
 let subscriptions = [];
@@ -60,10 +61,26 @@ async function connect() {
   return { ...auth, ...database, auth: auth.getAuth(instance), db: database.getDatabase(instance, config.databaseURL ?? "https://amigo-invisible-b52dd-default-rtdb.firebaseio.com") };
 }
 
-async function ownerUid() {
+async function adminUid() {
   await firebase.auth.authStateReady();
-  if (firebase.auth.currentUser) return firebase.auth.currentUser.uid;
-  return (await firebase.signInAnonymously(firebase.auth)).user.uid;
+  const user = firebase.auth.currentUser;
+  if (!user || user.isAnonymous) return null;
+  const permission = await firebase.get(dbRef(`admins/${user.uid}`));
+  return permission.val() === true ? user.uid : null;
+}
+
+function listGroups(current) {
+  const picker = find("group-picker");
+  watch("rooms", current, rooms => {
+    const groups = Object.entries(rooms ?? {}).sort((a, b) => (b[1].createdAt ?? 0) - (a[1].createdAt ?? 0));
+    picker.replaceChildren(new Option("Elegí un grupo", ""));
+    for (const [id, group] of groups) {
+      const count = Object.keys(group.tickets ?? {}).length;
+      const phase = group.phase === "drawn" ? "Sorteado" : "Inscripción abierta";
+      picker.add(new Option(`Grupo ${id.slice(-6)} · ${phase} · ${count} participantes`, id));
+    }
+    find("saved-groups").hidden = groups.length === 0;
+  });
 }
 
 function dbRef(path) {
@@ -91,14 +108,14 @@ async function copyValue(input, label = "Enlace copiado.") {
   }
 }
 
-function adminView(room, uid, current) {
+function adminView(room, current) {
   const invite = routeUrl(`join/${room}`);
   find("invite").value = invite;
   find("open-invite").href = invite;
   watch(`rooms/${room}`, current, data => {
-    if (!data || data.owner !== uid) {
+    if (!data) {
       show();
-      status.textContent = "Este panel se abre desde el navegador donde creaste el grupo.";
+      status.textContent = "No pudimos abrir este grupo.";
       return;
     }
     const entries = Object.entries(data.tickets ?? {});
@@ -125,7 +142,7 @@ function adminView(room, uid, current) {
     show("admin");
   }, () => {
     show();
-    status.textContent = "Este panel se abre desde el navegador donde creaste el grupo.";
+    status.textContent = "No pudimos abrir este grupo.";
   });
 }
 
@@ -207,7 +224,7 @@ async function loadPage() {
   status.textContent = "";
   show();
   const hash = location.hash.slice(1);
-  if (hash && !hash.includes("/")) {
+  if (hash && hash !== "admin" && !hash.includes("/")) {
     try {
       const draw = decodeDraw(hash);
       const people = find("legacy-people");
@@ -227,16 +244,20 @@ async function loadPage() {
 
   const [mode, room, token, extra] = hash.split("/");
   try {
-    if (!hash) {
-      const previous = stored("organizer-room");
-      find("resume").hidden = !previous;
-      if (previous) find("resume").href = routeUrl(`organize/${previous}`);
-      show("home");
+    if (!hash || hash === "admin") {
+      const uid = await adminUid();
+      if (current !== generation) return;
+      find("admin-entry").hidden = Boolean(uid);
+      find("admin-controls").hidden = !uid;
+      if (uid) listGroups(current);
+      show(hash === "admin" && !uid ? "login" : "home");
     } else if (!extra && roomPattern.test(room) && mode === "join" && (!token || ticketPattern.test(token))) {
       joinView(room, token || stored(`ticket/${room}`), current);
     } else if (!extra && roomPattern.test(room) && mode === "organize" && !token) {
-      const uid = await ownerUid();
-      if (current === generation) adminView(room, uid, current);
+      const uid = await adminUid();
+      if (current !== generation) return;
+      if (uid) adminView(room, current);
+      else show("login");
     } else {
       status.textContent = "Este enlace no es válido.";
     }
@@ -245,13 +266,45 @@ async function loadPage() {
   }
 }
 
+find("admin-login").onsubmit = async event => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector("button");
+  const password = find("admin-password");
+  button.disabled = true;
+  try {
+    if (find("admin-user").value.trim().toLowerCase() !== "admin") throw new Error();
+    await firebase.signInWithEmailAndPassword(firebase.auth, adminEmail, password.value);
+    if (!(await adminUid())) {
+      await firebase.signOut(firebase.auth);
+      throw new Error();
+    }
+    password.value = "";
+    if (location.hash === "#admin") location.hash = "";
+    else await loadPage();
+  } catch {
+    status.textContent = "No pudimos ingresar. Revisá el usuario y la contraseña.";
+  } finally {
+    button.disabled = false;
+  }
+};
+
+find("signout").onclick = async () => {
+  await firebase.signOut(firebase.auth);
+  await loadPage();
+};
+
+find("group-picker").onchange = event => {
+  if (event.currentTarget.value) location.hash = `organize/${event.currentTarget.value}`;
+};
+
 find("create").onclick = async event => {
   const button = event.currentTarget;
   button.disabled = true;
   try {
     const room = randomHex(16);
-    await firebase.set(dbRef(`rooms/${room}`), { owner: await ownerUid(), phase: "open" });
-    remember("organizer-room", room);
+    const uid = await adminUid();
+    if (!uid) throw new Error("Hace falta iniciar sesión como administrador.");
+    await firebase.set(dbRef(`rooms/${room}`), { owner: uid, phase: "open", createdAt: firebase.serverTimestamp() });
     location.hash = `organize/${room}`;
   } catch (error) {
     status.textContent = "No pudimos crear el grupo. Volvé a intentar.";
@@ -323,7 +376,7 @@ document.querySelectorAll("[data-copy]").forEach(button => {
 });
 
 try {
-  if (location.hash && !location.hash.slice(1).includes("/")) await loadPage();
+  if (location.hash && location.hash !== "#admin" && !location.hash.slice(1).includes("/")) await loadPage();
   firebase = await connect();
   window.addEventListener("hashchange", loadPage);
   await loadPage();
