@@ -1,4 +1,4 @@
-import { api, activateAdmin, administratorReady } from "./rounds-api.mjs";
+import { api } from "./rounds-api.mjs?v=2";
 
 const hash = location.hash.slice(1);
 if (/^(?:join|organize)\//u.test(hash) || (/^[A-Za-z0-9_-]+$/u.test(hash) && hash.length > 20)) {
@@ -9,8 +9,6 @@ const find = id => document.getElementById(id);
 const status = find("status");
 const views = ["home", "participant", "admin", "audit"];
 let adminToken;
-const activation = location.hash.match(/^#activar\/([a-f0-9]{32})$/u)?.[1];
-if (activation) history.replaceState(null, "", location.pathname + location.search);
 let displayedAudit;
 let displayedNames;
 let drawPending = false;
@@ -215,14 +213,4 @@ document.querySelectorAll("[data-copy]").forEach(button => {
 });
 
 window.addEventListener("hashchange", load);
-if (activation || location.hash === "#admin") {
-  try { adminToken = activation ? await activateAdmin(activation) : await administratorReady(); }
-  catch {}
-  if (activation && adminToken) location.hash = "admin";
-  else {
-    await load();
-    if (activation) status.textContent = "No pudimos habilitar este navegador. Volvé a abrir tu enlace privado.";
-  }
-} else {
-  await load();
-}
+await load();

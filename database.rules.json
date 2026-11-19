@@ -63,8 +63,8 @@
       "tickets": {
         "$token": {
           ".read": "$token.matches(/^[a-f0-9]{64}$/)",
-          ".write": "!data.exists() && newData.exists() && !root.child('live').child('round').exists() && !newData.child('recipient').exists() && !newData.child('round').exists()",
-          ".validate": "$token.matches(/^[a-f0-9]{64}$/) && newData.hasChildren(['name','key']) && newData.parent().parent().child('names').child(newData.child('key').val()).val() == $token",
+          ".write": "!data.exists() && newData.exists() && !root.child('live').child('board').child('latest').exists() && !newData.child('recipient').exists() && !newData.child('round').exists()",
+          ".validate": "$token.matches(/^[a-f0-9]{64}$/) && newData.hasChildren(['name','key']) && newData.parent().parent().child('names').child(newData.child('key').val()).val() == $token && newData.parent().parent().child('board').child('roster').child(newData.child('key').val()).val() == newData.child('name').val()",
           "name": {
             ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
           },
@@ -84,7 +84,7 @@
       },
       "names": {
         "$key": {
-          ".write": "!data.exists() && newData.exists() && !root.child('live').child('round').exists()",
+          ".write": "!data.exists() && newData.exists() && !root.child('live').child('board').child('latest').exists()",
           ".validate": "$key.matches(/^[a-f0-9]{64}$/) && newData.isString() && newData.val().matches(/^[a-f0-9]{64}$/) && newData.parent().parent().child('tickets').child(newData.val()).child('key').val() == $key"
         }
       },
@@ -95,6 +95,78 @@
       },
       "$other": {
         ".validate": false
+      },
+      "claims": {
+        "$uid": {
+          "$key": {
+            ".write": "auth != null && auth.uid == $uid && newData.exists()",
+            ".validate": "newData.isString() && newData.val().matches(/^[a-f0-9]{64}$/) && root.child('live').child('tickets').child(newData.val()).child('key').val() == $key"
+          }
+        }
+      },
+      "board": {
+        "latest": {
+          ".read": true,
+          ".write": "auth != null && newData.exists()",
+          ".validate": "newData.isNumber() && ((!data.exists() && newData.val() == 1) || (data.exists() && newData.val() == data.val() + 1)) && newData.parent().child('rounds').child('' + newData.val()).exists()"
+        },
+        "roster": {
+          ".read": "auth != null",
+          "$key": {
+            ".write": "!data.exists() && newData.exists() && !root.child('live').child('board').child('latest').exists()",
+            ".validate": "$key.matches(/^[a-f0-9]{64}$/) && newData.isString() && newData.val().length > 0 && newData.val().length <= 60 && newData.parent().parent().parent().child('tickets').child(newData.parent().parent().parent().child('names').child($key).val()).child('name').val() == newData.val()"
+          }
+        },
+        "rounds": {
+          "$round": {
+            ".write": "auth != null && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['panel','entries']) && $round == '' + newData.parent().parent().child('latest').val()",
+            "panel": {
+              ".read": "auth != null",
+              ".validate": "newData.hasChildren(['audit','selected']) && newData.child('audit').isString() && newData.parent().parent().parent().child('verification').child(newData.child('audit').val()).exists()"
+            },
+            "entries": {
+              "$key": {
+                ".read": "auth != null && $round == '' + root.child('live').child('board').child('latest').val() && root.child('live').child('claims').child(auth.uid).child($key).exists()",
+                ".validate": "$key.matches(/^[a-f0-9]{64}$/) && newData.isString() && newData.val().length > 0 && newData.val().length <= 60 && root.child('live').child('board').child('roster').child($key).exists()"
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "verification": {
+          "$token": {
+            ".read": "$token.matches(/^[a-f0-9]{64}$/) && (!data.exists() || data.child('round').val() == root.child('live').child('board').child('latest').val())",
+            ".write": "auth != null && !data.exists() && newData.exists()",
+            ".validate": "$token.matches(/^[a-f0-9]{64}$/) && newData.hasChildren(['round','count','assigned','unique','allEligible','nobodySelf']) && newData.child('round').val() == newData.parent().parent().child('latest').val() && newData.parent().parent().child('rounds').child('' + newData.child('round').val()).child('panel').child('audit').val() == $token",
+            "round": {
+              ".validate": "newData.isNumber()"
+            },
+            "count": {
+              ".validate": "newData.isNumber()"
+            },
+            "assigned": {
+              ".validate": "newData.isNumber()"
+            },
+            "unique": {
+              ".validate": "newData.isNumber()"
+            },
+            "allEligible": {
+              ".validate": "newData.isBoolean()"
+            },
+            "nobodySelf": {
+              ".validate": "newData.isBoolean()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     }
   }

@@ -2,6 +2,9 @@ import { createDraw } from "./draw.mjs";
 
 const sdk = "https://www.gstatic.com/firebasejs/11.10.0";
 let connection;
+let signingIn;
+const claims = new Set();
+
 function connect() {
   connection ??= Promise.all([
     import(sdk + "/firebase-app.js"), import(sdk + "/firebase-auth.js"),
@@ -15,6 +18,15 @@ function connect() {
   });
   return connection;
 }
+
+async function session(fb) {
+  await fb.auth.authStateReady();
+  if (fb.auth.currentUser) return fb.auth.currentUser;
+  signingIn ??= fb.signInAnonymously(fb.auth).then(result => result.user)
+    .finally(() => { signingIn = undefined; });
+  return signingIn;
+}
+
 const hex = bytes => Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
 const newToken = () => hex(crypto.getRandomValues(new Uint8Array(32)));
 
@@ -22,21 +34,6 @@ function fail(message, status) {
   const error = new Error(message);
   error.status = status;
   throw error;
-}
-
-export async function administratorReady() {
-  const fb = await connect();
-  await fb.auth.authStateReady();
-  const user = fb.auth.currentUser;
-  return Boolean(user && (await fb.get(fb.ref(fb.db, "admins/" + user.uid))).val() === true);
-}
-
-export async function activateAdmin(password) {
-  const fb = await connect();
-  await fb.signInWithEmailAndPassword(fb.auth, "admin@amigo-invisible-b52dd.invalid", password);
-  const allowed = await administratorReady();
-  if (!allowed) await fb.signOut(fb.auth);
-  return allowed;
 }
 
 export async function api(path, token, body) {
@@ -48,68 +45,79 @@ export async function api(path, token, body) {
     if (!name || name.length > 60) fail("Ingresá un nombre de hasta 60 caracteres.", 400);
     const canonical = name.normalize("NFC").toLocaleLowerCase("es-UY");
     if (canonical === "admin1") {
-      if (!(await administratorReady())) fail("Abrí tu enlace privado para habilitar el administrador.", 403);
+      await session(fb);
       return { admin: true, token: true };
     }
     const key = hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical))));
     if (token && (await get("tickets/" + token))?.key === key) return { token };
-    if (await get("round")) fail("El sorteo ya se hizo. Abrí tu enlace personal.", 409);
+    if (await get("board/latest")) fail("El sorteo ya se hizo. Abrí tu enlace personal.", 409);
     const personal = newToken();
     try {
-      await fb.update(ref(), { ["tickets/" + personal]: { name, key }, ["names/" + key]: personal });
+      await fb.update(ref(), { ["tickets/" + personal]: { name, key }, ["names/" + key]: personal,
+        ["board/roster/" + key]: name });
       return { token: personal };
     } catch {
       fail("No pudimos registrar el nombre. Si ya lo usaste, abrí tu enlace personal o agregá un apellido.", 409);
     }
   }
   if (path === "participant") {
-    const person = await get("tickets/" + token);
+    const [person, round] = await Promise.all([get("tickets/" + token), get("board/latest")]);
     if (!person) fail("Este enlace personal no es válido.", 404);
-    return { name: person.name, recipient: person.recipient, drawn: Boolean(person.round), round: person.round };
+    if (!round) return { name: person.name, drawn: false };
+    const user = await session(fb);
+    const claim = `claims/${user.uid}/${person.key}`;
+    if (!claims.has(claim)) {
+      await fb.set(ref(claim), token);
+      claims.add(claim);
+    }
+    let recipient;
+    try { recipient = await get(`board/rounds/${round}/entries/${person.key}`); }
+    catch (error) {
+      if (await get("board/latest") !== round) return api(path, token, body);
+      throw error;
+    }
+    return { name: person.name, recipient, drawn: true, round };
   }
   if (path === "audit") {
-    const summary = await get("verification/" + token);
+    const summary = await get("board/verification/" + token);
     if (!summary) fail("Este enlace de auditoría ya no está disponible.", 404);
     return summary;
   }
-  if (!(await administratorReady())) fail("Abrí tu enlace privado para habilitar el administrador.", 403);
-  const current = (await get()) ?? {};
+  await session(fb);
+  const [roster, latest] = await Promise.all([get("board/roster"), get("board/latest")]);
+  const entries = Object.entries(roster ?? {});
+  const current = latest ? await get(`board/rounds/${latest}/panel`) : null;
   if (path === "admin") {
-    const people = Object.values(current.tickets ?? {});
-    return { names: people.map(person => person.name), selected: people.filter(person => person.recipient).map(person => person.name),
-      audit: current.audit ?? null, round: current.round ?? 0 };
+    const selected = new Set(Object.values(current?.selected ?? {}));
+    return { names: entries.map(([, name]) => name), selected: entries.filter(([key]) => selected.has(key)).map(([, name]) => name),
+      audit: current?.audit ?? null, round: latest ?? 0 };
   }
   if (path === "draw") {
     const { selected, previousAudit } = body;
-    const nextAudit = newToken();
-    let firstAttempt = true;
-    const transaction = await fb.runTransaction(ref(), data => {
-      if (firstAttempt) data ??= current;
-      firstAttempt = false;
-      if (!data || (data.audit ?? null) !== previousAudit) return;
-      const people = Object.values(data.tickets ?? {});
-      const names = new Set(people.map(person => person.name));
-      if (!Array.isArray(selected) || selected.length < 2 || new Set(selected).size !== selected.length ||
-          selected.length > names.size || !selected.every(name => names.has(name))) return;
-      const draw = createDraw(selected);
-      const assignments = new Map(draw.names.map((name, index) => [name, draw.names[draw.recipients[index]]]));
-      data.round = (data.round ?? 0) + 1;
-      for (const person of people) {
-        person.round = data.round;
-        const recipient = assignments.get(person.name);
-        if (recipient) person.recipient = recipient;
-        else delete person.recipient;
-      }
-      data.audit = nextAudit;
-      const assigned = Array.from(assignments.values());
-      data.verification = { [nextAudit]: { round: data.round, count: selected.length,
-        assigned: assigned.length, unique: new Set(assigned).size,
-        allEligible: assigned.every(name => assignments.has(name)),
-        nobodySelf: Array.from(assignments).every(([person, recipient]) => person !== recipient) } };
-      return data;
-    }, { applyLocally: false });
-    if (!transaction.committed) fail("La ronda o la lista cambió. Revisá la selección y volvé a intentar.", 409);
-    return { audit: nextAudit };
+    if ((current?.audit ?? null) !== previousAudit) fail("Ya hay una ronda nueva. Revisá la selección.", 409);
+    const keys = new Map(entries.map(([key, name]) => [name, key]));
+    if (!Array.isArray(selected) || selected.length < 2 || new Set(selected).size !== selected.length ||
+        selected.length > keys.size || !selected.every(name => keys.has(name))) {
+      fail("Seleccioná al menos dos personas registradas.", 400);
+    }
+    const draw = createDraw(selected);
+    const audit = newToken();
+    const round = (latest ?? 0) + 1;
+    const assignments = Object.fromEntries(draw.names.map((name, index) => [keys.get(name), draw.names[draw.recipients[index]]]));
+    const recipients = Object.values(assignments);
+    const summary = { round, count: selected.length, assigned: recipients.length, unique: new Set(recipients).size,
+      allEligible: recipients.every(name => selected.includes(name)),
+      nobodySelf: draw.recipients.every((recipient, index) => recipient !== index) };
+    try {
+      await fb.update(ref("board"), {
+        latest: round,
+        [`rounds/${round}`]: { panel: { audit, selected: selected.map(name => keys.get(name)) }, entries: assignments },
+        [`verification/${audit}`]: summary,
+      });
+    } catch {
+      fail("La ronda o la lista cambió. Revisá la selección y volvé a intentar.", 409);
+    }
+    return { audit };
   }
   fail("Este enlace no está disponible.", 404);
 }
