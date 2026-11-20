@@ -36,6 +36,7 @@ function updateDrawButton() {
 }
 
 function renderAdmin(data) {
+  find("registration-link").value = new URL("/", location.origin).href;
   find("count").textContent = `Participantes registrados (${data.names.length})`;
   const namesKey = JSON.stringify(data.names);
   if (displayedNames !== namesKey || displayedAudit !== data.audit) {
@@ -149,12 +150,7 @@ async function load() {
   clearInterval(timer);
   status.textContent = "";
   find("result").textContent = "";
-  let [route, token] = location.hash.slice(1).split("/");
-  const extra = location.hash.slice(1).split("/").length > 2;
-  if (!route && personalToken && !adminToken) {
-    route = "personal";
-    token = personalToken;
-  }
+  const [route, token, extra] = location.hash.slice(1).split("/");
   if (!route) {
     adminToken = undefined;
     show("home");

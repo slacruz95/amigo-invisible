@@ -1,6 +1,6 @@
 # Amigo invisible
 
-1. Abrí la app, ingresá tu nombre y guardá tu enlace personal. El inicio reconoce a quienes ya se registraron en ese navegador.
+1. Abrí la app, ingresá tu nombre y guardá tu enlace personal. El enlace general siempre pide el nombre. Quienes ya se registraron pueden escribir el mismo nombre desde ese navegador o usar su enlace personal. El panel permite copiar el enlace general.
 2. Para administrar, abrí `/#admin` o ingresá como `admin1`. Cualquiera que use esa dirección o ese nombre puede acceder al panel. Marcá quiénes participan y lanzá el sorteo.
 3. Podés cambiar la selección y lanzar otra ronda. Al publicarla se reemplazan las asignaciones y el enlace de auditoría. El enlace de auditoría muestra las comprobaciones y quién le regala a quién. Compartilo solo con quien vaya a verificar la ronda.
 
