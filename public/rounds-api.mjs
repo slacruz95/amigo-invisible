@@ -50,14 +50,14 @@ export async function api(path, token, body) {
     }
     const key = hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical))));
     if (token && (await get("tickets/" + token))?.key === key && !(await get("board/removed/" + key))) return { token };
-    if (await get("board/latest")) fail("El sorteo ya se hizo. Abrí tu enlace personal.", 409);
+    if (await get("board/latest")) fail("El sorteo ya se hizo. Si ya te registraste, usá el mismo navegador y nombre.", 409);
     const personal = newToken();
     try {
       await fb.update(ref(), { ["tickets/" + personal]: { name, key }, ["names/" + key]: personal,
         ["board/roster/" + key]: name });
       return { token: personal };
     } catch {
-      fail("No pudimos registrar el nombre. Si ya lo usaste, abrí tu enlace personal o agregá un apellido.", 409);
+      fail("No pudimos registrar el nombre. Si ya te registraste, usá el mismo navegador. Si el nombre pertenece a otra persona, agregá un apellido.", 409);
     }
   }
   if (path === "participant") {

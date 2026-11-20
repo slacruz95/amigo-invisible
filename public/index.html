@@ -6,7 +6,7 @@
   <meta name="referrer" content="no-referrer">
   <title>Amigo invisible</title>
   <link rel="stylesheet" href="/styles.css">
-  <script type="module" src="/rounds.mjs?v=7"></script>
+  <script type="module" src="/rounds.mjs?v=8"></script>
   <style>
     #roster label { display: flex; align-items: center; gap: .65rem; margin: 0; cursor: pointer; }
     #roster input[type="checkbox"] { width: 1.125rem; height: 1.125rem; }
@@ -24,10 +24,6 @@
     </section>
     <section id="participant" hidden>
       <h2 id="identity"></h2>
-      <label for="personal-link">Tu enlace personal</label>
-      <input id="personal-link" readonly>
-      <button type="button" data-copy="personal-link">Copiar mi enlace personal</button>
-      <p>Guardalo para entrar desde otro dispositivo. Conservá el enlace en privado.</p>
       <p id="waiting">Esperá a que se haga el sorteo.</p>
       <p id="participant-round" hidden></p>
       <p id="result" aria-live="polite"></p>

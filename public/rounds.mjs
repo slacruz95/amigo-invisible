@@ -1,4 +1,4 @@
-import { api } from "./rounds-api.mjs?v=5";
+import { api } from "./rounds-api.mjs?v=6";
 
 const hash = location.hash.slice(1);
 if (/^(?:join|organize)\//u.test(hash) || (/^[A-Za-z0-9_-]+$/u.test(hash) && hash.length > 20)) {
@@ -111,7 +111,7 @@ async function refresh(route, token, current) {
       personalToken = token;
       try { localStorage.setItem("amigo-personal", token); } catch {}
       find("identity").textContent = data.name;
-      find("personal-link").value = link(`personal/${token}`);
+      if (location.hash.startsWith("#personal/")) history.replaceState(null, "", link("jugador"));
       find("waiting").hidden = Boolean(data.recipient);
       find("waiting").textContent = data.drawn ? "No participás en esta ronda." : "Esperá a que se haga el sorteo.";
       const message = data.recipient ? `Te toca regalarle a ${data.recipient}.` : "";
@@ -146,8 +146,10 @@ async function refresh(route, token, current) {
         personalToken = undefined;
         try { localStorage.removeItem("amigo-personal"); } catch {}
       }
-      if (!location.hash) show("home");
-      else show();
+      if (location.hash === "#jugador") {
+        history.replaceState(null, "", link(""));
+        show("home");
+      } else show();
     }
   }
 }
@@ -157,7 +159,11 @@ async function load() {
   clearInterval(timer);
   status.textContent = "";
   find("result").textContent = "";
-  const [route, token, extra] = location.hash.slice(1).split("/");
+  let [route, token, extra] = location.hash.slice(1).split("/");
+  if (route === "jugador" && token === undefined) {
+    route = "personal";
+    token = personalToken;
+  }
   if (!route) {
     adminToken = undefined;
     show("home");
@@ -206,7 +212,8 @@ find("enter").onsubmit = async event => {
     } else {
       personalToken = data.token;
       try { localStorage.setItem("amigo-personal", data.token); } catch {}
-      location.hash = `personal/${data.token}`;
+      if (location.hash === "#jugador") await load();
+      else location.hash = "jugador";
     }
     event.target.reset();
   } catch (error) {
