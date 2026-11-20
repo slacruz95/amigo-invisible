@@ -6,7 +6,7 @@
   <meta name="referrer" content="no-referrer">
   <title>Amigo invisible</title>
   <link rel="stylesheet" href="/styles.css">
-  <script type="module" src="/rounds.mjs?v=9"></script>
+  <script type="module" src="/rounds.mjs?v=11"></script>
   <style>
     #roster label { display: flex; align-items: center; gap: .65rem; margin: 0; cursor: pointer; }
     #roster input[type="checkbox"] { width: 1.125rem; height: 1.125rem; }
@@ -17,6 +17,7 @@
     <header><p class="eyebrow">INTERCAMBIO DE REGALOS</p><h1>Amigo invisible</h1></header>
     <section id="home">
       <form id="enter">
+        <p id="existing-player" hidden>Ya te registraste. Usá el nombre anterior.</p>
         <label for="name">Tu nombre de usuario</label>
         <input id="name" required maxlength="60" autocomplete="username" placeholder="Escribí tu nombre">
         <button>Entrar</button>

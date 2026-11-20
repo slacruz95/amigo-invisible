@@ -36,6 +36,22 @@ function fail(message, status) {
   throw error;
 }
 
+export async function watchAdmin(onChange) {
+  const fb = await connect();
+  await session(fb);
+  let pending;
+  const stops = ["roster", "removed", "latest", "cancelled"].map(path =>
+    fb.onValue(fb.ref(fb.db, "live/board/" + path), () => {
+      clearTimeout(pending);
+      pending = setTimeout(onChange, 50);
+    }, error => console.error(error))
+  );
+  return () => {
+    clearTimeout(pending);
+    for (const stop of stops) stop();
+  };
+}
+
 export async function api(path, token, body) {
   const fb = await connect();
   const ref = child => fb.ref(fb.db, child ? "live/" + child : "live");
@@ -49,7 +65,11 @@ export async function api(path, token, body) {
       return { admin: true, token: true };
     }
     const key = hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical))));
-    if (token && (await get("tickets/" + token))?.key === key && !(await get("board/removed/" + key))) return { token };
+    const previous = token ? await get("tickets/" + token) : null;
+    if (previous && !(await get("board/removed/" + previous.key))) {
+      if (previous.key !== key) fail("Ya te registraste. Usá el nombre anterior.", 409);
+      return { token };
+    }
     const personal = newToken();
     try {
       await fb.update(ref(), { ["tickets/" + personal]: { name, key }, ["names/" + key]: personal,

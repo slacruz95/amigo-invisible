@@ -15,6 +15,21 @@
             "value": "no-cache"
           }
         ]
+      },
+      {
+        "source": "{/,/index.html,/inscripcion}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/inscripcion",
+        "destination": "/index.html"
       }
     ]
   },

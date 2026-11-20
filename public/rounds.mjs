@@ -1,4 +1,4 @@
-import { api } from "./rounds-api.mjs?v=7";
+import { api, watchAdmin } from "./rounds-api.mjs?v=9";
 
 const hash = location.hash.slice(1);
 if (/^(?:join|organize)\//u.test(hash) || (/^[A-Za-z0-9_-]+$/u.test(hash) && hash.length > 20)) {
@@ -15,11 +15,14 @@ let cancelTarget;
 let displayedNames;
 let drawPending = false;
 let timer;
+let stopWatchingAdmin;
+let refreshVersion = 0;
 let generation = 0;
 let personalToken;
 try { personalToken = localStorage.getItem("amigo-personal"); } catch {}
 
 function show(view) {
+  if (view === "home") find("existing-player").hidden = !personalToken;
   for (const item of views) find(item).hidden = item !== view;
 }
 
@@ -38,7 +41,7 @@ function updateDrawButton() {
 }
 
 function renderAdmin(data) {
-  find("registration-link").value = new URL("/", location.origin).href;
+  find("registration-link").value = new URL("/inscripcion", location.origin).href;
   find("count").textContent = `Participantes registrados (${data.names.length})`;
   const namesKey = JSON.stringify(data.names);
   if (displayedNames !== namesKey || displayedAudit !== data.audit) {
@@ -100,10 +103,11 @@ function listItem(text) {
 }
 
 async function refresh(route, token, current) {
+  const version = ++refreshVersion;
   const path = { admin: "admin", personal: "participant", auditoria: "audit" }[route];
   try {
     const data = await api(path, token);
-    if (current !== generation) return;
+    if (current !== generation || version !== refreshVersion) return;
     if (route === "admin") {
       renderAdmin(data);
       show("admin");
@@ -138,7 +142,7 @@ async function refresh(route, token, current) {
       show("audit");
     }
   } catch (error) {
-    if (current !== generation) return;
+    if (current !== generation || version !== refreshVersion) return;
     status.textContent = error.message;
     if (route === "personal" && error.status === 404) {
       clearInterval(timer);
@@ -157,6 +161,8 @@ async function refresh(route, token, current) {
 async function load() {
   const current = ++generation;
   clearInterval(timer);
+  stopWatchingAdmin?.();
+  stopWatchingAdmin = undefined;
   status.textContent = "";
   find("result").textContent = "";
   let [route, token, extra] = location.hash.slice(1).split("/");
@@ -186,7 +192,16 @@ async function load() {
       }
     }
     await refresh(route, adminToken, current);
-    if (current === generation) timer = setInterval(() => refresh(route, adminToken, current), 2000);
+    if (current !== generation) return;
+    const update = () => refresh("admin", adminToken, current);
+    timer = setInterval(update, 15000);
+    try {
+      const stop = await watchAdmin(update);
+      if (current === generation) stopWatchingAdmin = stop;
+      else stop();
+    } catch (error) {
+      console.error(error);
+    }
     return;
   }
   if (!extra && ["personal", "auditoria"].includes(route) && /^[a-f0-9]{64}$/u.test(token ?? "")) {
