@@ -1,4 +1,4 @@
-import { api, watchAdmin } from "./rounds-api.mjs?v=9";
+import { api, watchAdmin } from "./rounds-api.mjs?v=10";
 
 const hash = location.hash.slice(1);
 if (/^(?:join|organize)\//u.test(hash) || (/^[A-Za-z0-9_-]+$/u.test(hash) && hash.length > 20)) {
@@ -22,7 +22,20 @@ let personalToken;
 try { personalToken = localStorage.getItem("amigo-personal"); } catch {}
 
 function show(view) {
-  if (view === "home") find("existing-player").hidden = !personalToken;
+  if (view === "home") {
+    const hint = find("existing-player");
+    hint.hidden = !personalToken;
+    hint.textContent = "Ya te registraste. Usá el nombre anterior.";
+    if (personalToken) {
+      const saved = personalToken;
+      const current = generation;
+      api("remembered", saved).then(person => {
+        if (current !== generation || personalToken !== saved || find("home").hidden) return;
+        hint.hidden = !person;
+        if (person) hint.textContent = `Ya te registraste como ${person.name}. Usá ese nombre para entrar.`;
+      }).catch(() => {});
+    }
+  }
   for (const item of views) find(item).hidden = item !== view;
 }
 

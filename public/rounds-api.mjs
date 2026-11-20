@@ -56,6 +56,11 @@ export async function api(path, token, body) {
   const fb = await connect();
   const ref = child => fb.ref(fb.db, child ? "live/" + child : "live");
   const get = async child => (await fb.get(ref(child))).val();
+  if (path === "remembered") {
+    const person = token ? await get("tickets/" + token) : null;
+    if (!person || await get("board/removed/" + person.key)) return null;
+    return { name: person.name };
+  }
   if (path === "enter") {
     const name = body.name.trim().replace(/\s+/gu, " ");
     if (!name || name.length > 60) fail("Ingresá un nombre de hasta 60 caracteres.", 400);
@@ -67,7 +72,7 @@ export async function api(path, token, body) {
     const key = hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical))));
     const previous = token ? await get("tickets/" + token) : null;
     if (previous && !(await get("board/removed/" + previous.key))) {
-      if (previous.key !== key) fail("Ya te registraste. Usá el nombre anterior.", 409);
+      if (previous.key !== key) fail(`Ya te registraste como ${previous.name}. Usá ese nombre para entrar.`, 409);
       return { token };
     }
     const personal = newToken();
