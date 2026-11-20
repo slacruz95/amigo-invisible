@@ -63,7 +63,7 @@
       "tickets": {
         "$token": {
           ".read": "$token.matches(/^[a-f0-9]{64}$/)",
-          ".write": "!data.exists() && newData.exists() && !root.child('live').child('board').child('latest').exists() && !newData.child('recipient').exists() && !newData.child('round').exists()",
+          ".write": "!data.exists() && newData.exists() && !newData.child('recipient').exists() && !newData.child('round').exists()",
           ".validate": "$token.matches(/^[a-f0-9]{64}$/) && newData.hasChildren(['name','key']) && newData.parent().parent().child('names').child(newData.child('key').val()).val() == $token && newData.parent().parent().child('board').child('roster').child(newData.child('key').val()).val() == newData.child('name').val()",
           "name": {
             ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
@@ -84,7 +84,7 @@
       },
       "names": {
         "$key": {
-          ".write": "!data.exists() && newData.exists() && !root.child('live').child('board').child('latest').exists()",
+          ".write": "!data.exists() && newData.exists()",
           ".validate": "$key.matches(/^[a-f0-9]{64}$/) && newData.isString() && newData.val().matches(/^[a-f0-9]{64}$/) && newData.parent().parent().child('tickets').child(newData.val()).child('key').val() == $key"
         }
       },
@@ -113,7 +113,7 @@
         "roster": {
           ".read": "auth != null",
           "$key": {
-            ".write": "!data.exists() && newData.exists() && !root.child('live').child('board').child('latest').exists()",
+            ".write": "!data.exists() && newData.exists()",
             ".validate": "$key.matches(/^[a-f0-9]{64}$/) && newData.isString() && newData.val().length > 0 && newData.val().length <= 60 && newData.parent().parent().parent().child('tickets').child(newData.parent().parent().parent().child('names').child($key).val()).child('name').val() == newData.val()"
           }
         },

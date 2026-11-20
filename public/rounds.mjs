@@ -1,4 +1,4 @@
-import { api } from "./rounds-api.mjs?v=6";
+import { api } from "./rounds-api.mjs?v=7";
 
 const hash = location.hash.slice(1);
 if (/^(?:join|organize)\//u.test(hash) || (/^[A-Za-z0-9_-]+$/u.test(hash) && hash.length > 20)) {
@@ -113,7 +113,7 @@ async function refresh(route, token, current) {
       find("identity").textContent = data.name;
       if (location.hash.startsWith("#personal/")) history.replaceState(null, "", link("jugador"));
       find("waiting").hidden = Boolean(data.recipient);
-      find("waiting").textContent = data.drawn ? "No participás en esta ronda." : "Esperá a que se haga el sorteo.";
+      find("waiting").textContent = data.drawn ? "No participás en esta ronda. Esperá al próximo sorteo." : "Esperá a que se haga el sorteo.";
       const message = data.recipient ? `Te toca regalarle a ${data.recipient}.` : "";
       if (find("result").textContent !== message) find("result").textContent = message;
       find("participant-round").hidden = !data.drawn;

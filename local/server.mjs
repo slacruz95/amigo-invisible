@@ -79,7 +79,6 @@ async function request(req, res) {
       if (existing.token === token) return send(res, 200, { token });
       return send(res, 409, { error: "Ese nombre ya está registrado. Usá tu enlace personal o agregá un apellido." });
     }
-    if (state.audit) return send(res, 409, { error: "El sorteo ya se hizo. Abrí tu enlace personal para ver el resultado." });
     if (state.people.length >= 100) return send(res, 409, { error: "El grupo llegó a 100 participantes." });
     const person = { name, token: newToken(), recipient: null };
     save({ ...state, people: [...state.people, person] });

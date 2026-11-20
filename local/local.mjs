@@ -96,7 +96,7 @@ async function refresh(route, token, current) {
       find("identity").textContent = data.name;
       find("personal-link").value = link(`personal/${token}`);
       find("waiting").hidden = Boolean(data.recipient);
-      find("waiting").textContent = data.drawn ? "No participás en esta ronda." : "Esperá a que se haga el sorteo.";
+      find("waiting").textContent = data.drawn ? "No participás en esta ronda. Esperá al próximo sorteo." : "Esperá a que se haga el sorteo.";
       const message = data.recipient ? `Te toca regalarle a ${data.recipient}.` : "";
       if (find("result").textContent !== message) find("result").textContent = message;
       find("participant-round").hidden = !data.drawn;

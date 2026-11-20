@@ -50,7 +50,6 @@ export async function api(path, token, body) {
     }
     const key = hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical))));
     if (token && (await get("tickets/" + token))?.key === key && !(await get("board/removed/" + key))) return { token };
-    if (await get("board/latest")) fail("El sorteo ya se hizo. Si ya te registraste, usá el mismo navegador y nombre.", 409);
     const personal = newToken();
     try {
       await fb.update(ref(), { ["tickets/" + personal]: { name, key }, ["names/" + key]: personal,
