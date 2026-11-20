@@ -155,16 +155,27 @@ async function load() {
     route = "personal";
     token = personalToken;
   }
-  if ((!route || route === "admin") && !adminToken) {
-    show("home");
-    return;
-  }
   if (!route) {
     adminToken = undefined;
     show("home");
     return;
   }
   if (route === "admin" && !token) {
+    if (!adminToken) {
+      show();
+      status.textContent = "Abriendo el panel…";
+      try {
+        const auth = await api("enter", null, { name: "admin1" });
+        if (current !== generation) return;
+        adminToken = auth.token;
+        status.textContent = "";
+      } catch {
+        if (current !== generation) return;
+        show("home");
+        status.textContent = "No pudimos abrir el panel. Recargá la página para volver a intentar.";
+        return;
+      }
+    }
     await refresh(route, adminToken, current);
     if (current === generation) timer = setInterval(() => refresh(route, adminToken, current), 2000);
     return;
