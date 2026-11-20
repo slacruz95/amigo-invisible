@@ -6,7 +6,7 @@
   <meta name="referrer" content="no-referrer">
   <title>Amigo invisible</title>
   <link rel="stylesheet" href="/styles.css">
-  <script type="module" src="/rounds.mjs?v=6"></script>
+  <script type="module" src="/rounds.mjs?v=7"></script>
   <style>
     #roster label { display: flex; align-items: center; gap: .65rem; margin: 0; cursor: pointer; }
     #roster input[type="checkbox"] { width: 1.125rem; height: 1.125rem; }
@@ -41,6 +41,12 @@
       <p>Marcá a quienes participan en esta ronda.</p>
       <ul id="roster"></ul>
       <button id="draw" disabled>Lanzar sorteo</button>
+      <button id="cancel-round" class="secondary" type="button" hidden>Cancelar sorteo</button>
+      <div id="cancel-confirmation" hidden>
+        <p>Si cancelás esta ronda, las personas volverán a esperar el sorteo.</p>
+        <button id="confirm-cancel" type="button">Confirmar cancelación</button>
+        <button id="keep-round" class="secondary" type="button">Mantener sorteo</button>
+      </div>
       <div id="audit-share" hidden>
         <p id="round"></p>
         <p>Compartí el enlace de auditoría de esta ronda con una persona de confianza.</p>

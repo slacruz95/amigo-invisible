@@ -61,10 +61,12 @@ export async function api(path, token, body) {
     }
   }
   if (path === "participant") {
-    const [person, round] = await Promise.all([get("tickets/" + token), get("board/latest")]);
+    const [person, round, cancelled] = await Promise.all([
+      get("tickets/" + token), get("board/latest"), get("board/cancelled"),
+    ]);
     if (!person) fail("Este enlace personal no es válido.", 404);
     if (await get("board/removed/" + person.key)) fail("Este participante fue eliminado del sorteo.", 404);
-    if (!round) return { name: person.name, drawn: false };
+    if (!round || cancelled === round) return { name: person.name, drawn: false };
     const user = await session(fb);
     const claim = `claims/${user.uid}/${person.key}`;
     if (!claims.has(claim)) {
@@ -74,18 +76,36 @@ export async function api(path, token, body) {
     let recipient;
     try { recipient = await get(`board/rounds/${round}/entries/${person.key}`); }
     catch (error) {
-      if (await get("board/latest") !== round) return api(path, token, body);
+      const [latest, cancelledRound] = await Promise.all([get("board/latest"), get("board/cancelled")]);
+      if (latest !== round || cancelledRound === round) return api(path, token, body);
       throw error;
     }
     return { name: person.name, recipient, drawn: true, round };
   }
   if (path === "audit") {
-    const summary = await get("board/verification/" + token);
+    let summary;
+    try { summary = await get("board/verification/" + token); }
+    catch (error) {
+      if (error.code !== "PERMISSION_DENIED") throw error;
+    }
     if (!summary) fail("Este enlace de auditoría ya no está disponible.", 404);
     return summary;
   }
   await session(fb);
-  const [roster, latest, removed] = await Promise.all([get("board/roster"), get("board/latest"), get("board/removed")]);
+  const [roster, latest, removed, cancelled] = await Promise.all([
+    get("board/roster"), get("board/latest"), get("board/removed"), get("board/cancelled"),
+  ]);
+  if (path === "cancel") {
+    if (!latest || body.round !== latest || cancelled === latest) {
+      fail("Esa ronda ya no está activa. Actualizá el panel.", 409);
+    }
+    try {
+      await fb.set(ref("board/cancelled"), latest);
+    } catch {
+      fail("No se pudo cancelar esa ronda. Actualizá el panel.", 409);
+    }
+    return { cancelled: true };
+  }
   const entries = Object.entries(roster ?? {}).filter(([key]) => !removed?.[key]);
   if (path === "remove") {
     const entry = entries.find(([, name]) => name === body.name);
@@ -101,7 +121,7 @@ export async function api(path, token, body) {
   if (path === "admin") {
     const selected = new Set(Object.values(current?.selected ?? {}));
     return { names: entries.map(([, name]) => name), selected: entries.filter(([key]) => selected.has(key)).map(([, name]) => name),
-      audit: current?.audit ?? null, round: latest ?? 0 };
+      audit: current?.audit ?? null, round: latest ?? 0, cancelled: Boolean(latest && latest === cancelled) };
   }
   if (path === "draw") {
     const { selected, previousAudit } = body;

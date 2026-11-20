@@ -1,4 +1,4 @@
-import { api } from "./rounds-api.mjs?v=4";
+import { api } from "./rounds-api.mjs?v=5";
 
 const hash = location.hash.slice(1);
 if (/^(?:join|organize)\//u.test(hash) || (/^[A-Za-z0-9_-]+$/u.test(hash) && hash.length > 20)) {
@@ -10,6 +10,8 @@ const status = find("status");
 const views = ["home", "participant", "admin", "audit"];
 let adminToken;
 let displayedAudit;
+let displayedRound;
+let cancelTarget;
 let displayedNames;
 let drawPending = false;
 let timer;
@@ -63,10 +65,15 @@ function renderAdmin(data) {
     displayedNames = namesKey;
     displayedAudit = data.audit;
   }
-  find("draw").textContent = data.audit ? "Volver a lanzar el sorteo" : "Lanzar sorteo";
+  displayedRound = data.round;
+  const active = Boolean(data.audit && !data.cancelled);
+  if (!active || cancelTarget !== data.round) cancelTarget = undefined;
+  find("cancel-round").hidden = !active || Boolean(cancelTarget);
+  find("cancel-confirmation").hidden = !cancelTarget;
+  find("draw").textContent = active ? "Volver a lanzar el sorteo" : "Lanzar sorteo";
   updateDrawButton();
-  find("audit-share").hidden = !data.audit;
-  if (data.audit) {
+  find("audit-share").hidden = !active;
+  if (active) {
     find("round").textContent = `Ronda ${data.round} publicada.`;
     find("audit-link").value = link(`auditoria/${data.audit}`);
   }
@@ -202,6 +209,38 @@ find("enter").onsubmit = async event => {
       location.hash = `personal/${data.token}`;
     }
     event.target.reset();
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
+
+find("cancel-round").onclick = () => {
+  cancelTarget = displayedRound;
+  find("cancel-round").hidden = true;
+  find("cancel-confirmation").hidden = false;
+  find("confirm-cancel").focus();
+};
+
+find("keep-round").onclick = () => {
+  cancelTarget = undefined;
+  find("cancel-confirmation").hidden = true;
+  find("cancel-round").hidden = false;
+  find("cancel-round").focus();
+};
+
+find("confirm-cancel").onclick = async () => {
+  const target = cancelTarget;
+  if (!target) return;
+  const button = find("confirm-cancel");
+  button.disabled = true;
+  status.textContent = "";
+  try {
+    await api("cancel", adminToken, { round: target });
+    cancelTarget = undefined;
+    await refresh("admin", adminToken, generation);
+    status.textContent = "Sorteo cancelado. Los participantes están esperando una nueva ronda.";
   } catch (error) {
     status.textContent = error.message;
   } finally {

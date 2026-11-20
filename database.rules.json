@@ -127,7 +127,7 @@
             },
             "entries": {
               "$key": {
-                ".read": "auth != null && $round == '' + root.child('live').child('board').child('latest').val() && root.child('live').child('claims').child(auth.uid).child($key).exists() && !root.child('live').child('board').child('removed').child($key).exists()",
+                ".read": "auth != null && $round == '' + root.child('live').child('board').child('latest').val() && root.child('live').child('claims').child(auth.uid).child($key).exists() && !root.child('live').child('board').child('removed').child($key).exists() && root.child('live').child('board').child('cancelled').val() != root.child('live').child('board').child('latest').val()",
                 ".validate": "$key.matches(/^[a-f0-9]{64}$/) && newData.isString() && newData.val().length > 0 && newData.val().length <= 60 && root.child('live').child('board').child('roster').child($key).exists() && !root.child('live').child('board').child('removed').child($key).exists()"
               }
             },
@@ -138,7 +138,7 @@
         },
         "verification": {
           "$token": {
-            ".read": "$token.matches(/^[a-f0-9]{64}$/) && (!data.exists() || data.child('round').val() == root.child('live').child('board').child('latest').val())",
+            ".read": "$token.matches(/^[a-f0-9]{64}$/) && (!data.exists() || data.child('round').val() == root.child('live').child('board').child('latest').val()) && root.child('live').child('board').child('cancelled').val() != data.child('round').val()",
             ".write": "auth != null && !data.exists() && newData.exists()",
             ".validate": "$token.matches(/^[a-f0-9]{64}$/) && newData.hasChildren(['round','count','assigned','unique','allEligible','nobodySelf']) && newData.child('round').val() == newData.parent().parent().child('latest').val() && newData.parent().parent().child('rounds').child('' + newData.child('round').val()).child('panel').child('audit').val() == $token",
             "round": {
@@ -188,6 +188,11 @@
             ".write": "auth != null && !data.exists() && newData.val() == true && root.child('live').child('board').child('roster').child($key).exists()",
             ".validate": "$key.matches(/^[a-f0-9]{64}$/) && newData.val() == true"
           }
+        },
+        "cancelled": {
+          ".read": true,
+          ".write": "auth != null && newData.exists() && (!data.exists() || data.val() != newData.val())",
+          ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() == root.child('live').child('board').child('latest').val()"
         }
       }
     }
